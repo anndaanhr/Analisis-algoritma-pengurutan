@@ -1,0 +1,185 @@
+#include <iostream>
+#include <vector>
+#include <chrono>
+#include <algorithm>
+
+using namespace std;
+using namespace chrono;
+
+vector<int> generateRandomArray(int size) {
+    vector<int> arr(size);
+    for (int i = 0; i < size; ++i) {
+        arr[i] = rand() % size;  
+    }
+    return arr;
+}
+
+vector<int> generateSortedArray(int size) {
+    vector<int> arr(size);
+    for (int i = 0; i < size; ++i) {
+        arr[i] = i;
+    }
+    return arr;
+}
+
+vector<int> generateReverseSortedArray(int size) {
+    vector<int> arr(size);
+    for (int i = 0; i < size; ++i) {
+        arr[i] = size - i;
+    }
+    return arr;
+}
+
+void bubbleSort(vector<int>& arr) {
+    int n = arr.size();
+    bool swapped;
+    for (int i = 0; i < n - 1; ++i) {
+        swapped = false;
+        for (int j = 0; j < n - i - 1; ++j) {
+            if (arr[j] > arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+    }
+}
+
+void insertionSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int i = 1; i < n; ++i) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+}
+
+void selectionSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int i = 0; i < n - 1; ++i) {
+        int min_idx = i;
+        for (int j = i + 1; j < n; ++j) {
+            if (arr[j] < arr[min_idx]) {
+                min_idx = j;
+            }
+        }
+        swap(arr[i], arr[min_idx]);
+    }
+}
+
+void merge(vector<int>& arr, int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+    
+    vector<int> L(n1), R(n2);
+    
+    for (int i = 0; i < n1; ++i)
+        L[i] = arr[left + i];
+    for (int j = 0; j < n2; ++j)
+        R[j] = arr[mid + 1 + j];
+    
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            arr[k] = L[i];
+            ++i;
+        } else {
+            arr[k] = R[j];
+            ++j;
+        }
+        ++k;
+    }
+    
+    while (i < n1) {
+        arr[k] = L[i];
+        ++i;
+        ++k;
+    }
+    
+    while (j < n2) {
+        arr[k] = R[j];
+        ++j;
+        ++k;
+    }
+}
+
+void mergeSort(vector<int>& arr, int left, int right) {
+    if (left >= right)
+        return;
+    
+    int mid = left + (right - left) / 2;
+    mergeSort(arr, left, mid);
+    mergeSort(arr, mid + 1, right);
+    merge(arr, left, mid, right);
+}
+
+int partition(vector<int>& arr, int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+    
+    for (int j = low; j <= high - 1; ++j) {
+        if (arr[j] < pivot) {
+            ++i;
+            swap(arr[i], arr[j]);
+        }
+    }
+    swap(arr[i + 1], arr[high]);
+    return i + 1;
+}
+
+void quickSort(vector<int>& arr, int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
+    }
+}
+
+void measureAndPrint(vector<int>& arr, string sortName) {
+    vector<int> sizes = {10, 100, 500, 1000, 10000};
+    
+    cout << sortName << " Sort:\n";
+    cout << "------------------------------------\n";
+    for (int size : sizes) {
+        vector<int> temp(arr.begin(), arr.begin() + size);
+        
+        auto start = high_resolution_clock::now();
+        if (sortName == "Bubble") {
+            bubbleSort(temp);
+        } else if (sortName == "Insertion") {
+            insertionSort(temp);
+        } else if (sortName == "Selection") {
+            selectionSort(temp);
+        } else if (sortName == "Merge") {
+            mergeSort(temp, 0, temp.size() - 1);
+        } else if (sortName == "Quick") {
+            quickSort(temp, 0, temp.size() - 1);
+        }
+        auto stop = high_resolution_clock::now();
+        
+        auto duration = duration_cast<microseconds>(stop - start);
+        
+        cout << "N=" << size << ": " << duration.count() << " microseconds\n";
+    }
+    cout << "\n";
+}
+
+int main() {
+    vector<int> randomData(10000);
+    for (int i = 0; i < 10000; ++i) {
+        randomData[i] = rand() % 10000;
+    }
+    
+    measureAndPrint(randomData, "Bubble");
+    measureAndPrint(randomData, "Insertion");
+    measureAndPrint(randomData, "Selection");
+    measureAndPrint(randomData, "Merge");
+    measureAndPrint(randomData, "Quick");
+    
+    return 0;
+}
+ 
